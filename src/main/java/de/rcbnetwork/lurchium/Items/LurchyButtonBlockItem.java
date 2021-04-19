@@ -64,8 +64,6 @@ public class LurchyButtonBlockItem extends BlockItem implements ServersideObject
                         blockState2 = this.placeFromTag(blockPos, world, itemStack, blockState2);
                         this.postPlacement(blockPos, world, playerEntity, itemStack, blockState2);
                         block.onPlaced(world, blockPos, blockState2, playerEntity, itemStack);
-                        System.out.println(Registry.BLOCK.getId(block));
-                        System.out.println(Registry.BLOCK.getRawId(block));
                         if (playerEntity instanceof ServerPlayerEntity) {
                             Criteria.PLACED_BLOCK.trigger((ServerPlayerEntity)playerEntity, blockPos, itemStack);
                         }

@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -73,7 +74,7 @@ public class Lurchium implements ModInitializer {
             };
         });
         ServerWorldEvents.LOAD.register((s, world) -> {
-            ServerTickEvents.START_WORLD_TICK.register(this::onTick);
+            ServerTickEvents.END_WORLD_TICK.register(this::onTick);
         });
     }
 
