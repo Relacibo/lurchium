@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "lurchium",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Lurchium",
+  "description": "Increases overall Lurchigkeit of the server.",
   "authors": [
     "Me!"
   ],
@@ -14,16 +14,16 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/lurchium/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "de.rcbnetwork.lurchium.Lurchium"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "lurchium.mixins.json"
   ],
 
   "depends": {
@@ -33,5 +33,10 @@
   },
   "suggests": {
     "another-mod": "*"
+  },
+  "custom": {
+    "cardinal-components": [
+      "lurchium:store"
+    ]
   }
 }

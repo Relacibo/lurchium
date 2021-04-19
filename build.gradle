@@ -16,6 +16,10 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+	maven {
+		name = "Ladysnake Mods"
+		url = 'https://ladysnake.jfrog.io/artifactory/mods'
+	}
 }
 
 dependencies {
@@ -29,6 +33,18 @@ dependencies {
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
+	// Replace modImplementation with modApi if you expose components in your own API
+
+	// Replace modImplementation with modApi if you expose components in your own API
+	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:2.8.0"
+	// Includes Cardinal Components API as a Jar-in-Jar dependency (optional but recommended)
+	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:2.8.0"
+
+	// Replace modImplementation with modApi if you expose components in your own API
+	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-world:2.8.0"
+	// Includes Cardinal Components API as a Jar-in-Jar dependency (optional but recommended)
+	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-world:2.8.0"
+
 }
 
 processResources {
