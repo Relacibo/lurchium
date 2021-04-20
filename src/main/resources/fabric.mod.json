@@ -34,6 +34,11 @@
   "suggests": {
     "another-mod": "*"
   },
+  "entrypoints": {
+    "cardinal-components": [
+      "de.rcbnetwork.lurchium.StoreInitializer"
+    ]
+  },
   "custom": {
     "cardinal-components": [
       "lurchium:store"
