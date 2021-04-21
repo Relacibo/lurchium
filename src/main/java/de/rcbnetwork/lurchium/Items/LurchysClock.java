@@ -1,5 +1,6 @@
 package de.rcbnetwork.lurchium.Items;
 
+import de.rcbnetwork.lurchium.LurchiumItem;
 import de.rcbnetwork.lurchium.ServersideObject;
 import de.rcbnetwork.lurchium.Store;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
@@ -12,7 +13,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
-public class LurchysClock extends Item implements ServersideObject {
+public class LurchysClock extends Item implements LurchiumItem {
     public LurchysClock(Settings settings) {
         super(settings);
     }
@@ -42,5 +43,10 @@ public class LurchysClock extends Item implements ServersideObject {
     @Override
     public int getParentRawId() {
         return 685;
+    }
+
+    @Override
+    public String getCustomName() {
+        return "Lurchys magische Uhr";
     }
 }
