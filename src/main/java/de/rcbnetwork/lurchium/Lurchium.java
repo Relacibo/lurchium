@@ -3,33 +3,42 @@ package de.rcbnetwork.lurchium;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import de.rcbnetwork.lurchium.Blocks.LurchysChest;
 import de.rcbnetwork.lurchium.Items.LurchysClock;
-import de.rcbnetwork.lurchium.Items.LurchysWand;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ChestBlock;
+import net.minecraft.block.SignBlock;
+import net.minecraft.block.entity.ChestBlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static net.minecraft.server.command.CommandManager.argument;
@@ -40,11 +49,11 @@ public class Lurchium implements ModInitializer {
 
     private long oldTime = -1;
 
+
+
     @Override
     public void onInitialize() {
         ServersideObjectRegistry.ITEMS.put(new Identifier("lurchium", "lurchys_clock"), new LurchysClock());
-        //ServersideObjectRegistry.ITEMS.put(new Identifier("lurchium", "lurchys_wand"), new LurchysWand());
-        //ServersideObjectRegistry.BLOCKS.put(new Identifier("lurchium", "lurchys_chest"), new LurchysChest());
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher, dedicated) -> dispatcher.register(literal(TIMER_ROOT_COMMAND)
                         .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
@@ -69,18 +78,41 @@ public class Lurchium implements ModInitializer {
                         .then(literal("set_display")
                                 .executes(this::executeSetDisplay))
                 ));
-
-        ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
-        });
         ServerWorldEvents.LOAD.register((s, world) -> {
             Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
+            BlockPos chestPosition = store.chestPosition;
+            if (chestPosition != null) {
+                BlockState chestState = world.getBlockState(chestPosition);
+                if (chestState != null) {
+                    addListenerToChestAt(world, store, chestPosition, chestState);
+                }
+            }
+            printLeaderBoard(world, store);
             ServerTickEvents.END_WORLD_TICK.register(w -> this.onTick(w, store));
         });
-        Item axe = Registry.ITEM.get(new Identifier("wooden_axe"));
-        System.out.println(Registry.ITEM.getRawId(axe));
+    }
+
+    private void printLeaderBoard(World world, Store store) {
+        BlockPos signPosition = store.signPosition;
+        BlockState state = world.getBlockState(signPosition);
+        if (state == null) {
+            return;
+        }
+        Block block = state.getBlock();
+        if (!(block instanceof SignBlock)) {
+            return;
+        }
+        store.leaderBoard.forEach((playerName, time) -> {
+            SignBlockEntity signBlockEntity = (SignBlockEntity)world.getBlockEntity(signPosition);
+            signBlockEntity.setTextOnRow(0, new LiteralText(""));
+            signBlockEntity.setTextOnRow(1, playerName);
+            signBlockEntity.setTextOnRow(2, new LiteralText(formatIGT(time)));
+            signBlockEntity.setTextOnRow(3, new LiteralText(""));
+        });
     }
 
     private int executeSetDisplay(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        System.out.println("Execute Display");
         ServerWorld world = context.getSource().getWorld();
         HitResult hit = context.getSource().getPlayer().raycast(20D, 0.0F, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
@@ -93,11 +125,19 @@ public class Lurchium implements ModInitializer {
     }
 
     private boolean setDisplay(ServerWorld world, Store store, BlockPos pos) {
+        System.out.println("Chest");
+        System.out.println(pos.toString());
         BlockState state = world.getBlockState(pos);
+        if (!(state.getBlock() instanceof SignBlock)) {
+            return false;
+        }
+        store.signPosition = pos;
+        System.out.println(store.signPosition.toString());
         return true;
     }
 
     private int executeSetChest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        System.out.println("Execute Chest");
         ServerWorld world = context.getSource().getWorld();
         HitResult hit = context.getSource().getPlayer().raycast(20D, 0.0F, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
@@ -110,8 +150,91 @@ public class Lurchium implements ModInitializer {
     }
 
     private boolean setChest(ServerWorld world, Store store, BlockPos pos) {
+        System.out.println("Chest");
+        System.out.println(pos.toString());
         BlockState state = world.getBlockState(pos);
+        if (state == null || !(state.getBlock() instanceof ChestBlock)) {
+            return false;
+        }
+        // Check if same chest
+        BlockPos oldPos = store.chestPosition;
+        boolean samePos = false;
+        BlockState oldState = null;
+        if (oldPos != null) {
+            samePos = Util.doesBlockPosEqual(pos, oldPos);
+            oldState = world.getBlockState(oldPos);
+            if (samePos) {
+                if (oldState == state) {
+                    return true;
+                }
+            }
+        }
+
+        // Add listener to new chest
+        if (!addListenerToChestAt(world, store, pos, state)) {
+            return false;
+        }
+        store.chestPosition = pos;
+        System.out.println(store.chestPosition.toString());
+        if (samePos) {
+            return true;
+        }
+        // Remove listener from old chest
+        if (oldState != null) {
+            Block oldChestBlock = oldState.getBlock();
+            if (oldChestBlock instanceof ChestBlock) {
+                ChestBlock oldChest = (ChestBlock) oldChestBlock;
+                Inventory oldInventory = ChestBlock.getInventory(oldChest, oldState, world, oldPos, true);
+                if (oldInventory instanceof SimpleInventory) {
+                    ((SimpleInventory) oldInventory).removeListener((sender) -> this.onLurchyChestInventoryChanged(sender, oldInventory));
+                }
+            }
+        }
         return true;
+    }
+
+    private boolean addListenerToChestAt(ServerWorld world, Store store, BlockPos pos, BlockState state) {
+        Block block = state.getBlock();
+        if (block instanceof ChestBlock) {
+            ChestBlock chest = (ChestBlock) block;
+            Inventory inventory = ChestBlock.getInventory(chest, state, world, pos, true);
+            if (inventory instanceof ChestBlockEntity) {
+                ((ChestBlockEntityWithCustomEvents) inventory).getInventoryChangedEvent().addListener((w, p, player, newInventory) -> this.onLurchyChestInventoryChanged(w, p, player, newInventory));
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private ActionResult onLurchyChestInventoryChanged(World world, BlockPos position, Entity entity, DefaultedList<ItemStack> chestInventory) {
+        System.out.println("*****");
+        if (!(entity instanceof PlayerEntity)) {
+            return ActionResult.PASS;
+        }
+        // Remove clock from inventory
+        Item clock = (Item) ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"));
+        boolean removedClock = false;
+        for (int i = 0; i < chestInventory.size(); ++i) {
+            ItemStack itemStack = chestInventory.get(i);
+            if (clock == itemStack.getItem() && itemStack.getCount() > 0) {
+                chestInventory.remove(i);
+                removedClock = true;
+            }
+        }
+        if (!removedClock) {
+            return ActionResult.PASS;
+        }
+        PlayerEntity player = (PlayerEntity)entity;
+        Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
+        Text playerName = player.getName();
+        if (store.leaderBoard.containsKey(playerName)) {
+            return ActionResult.PASS;
+        }
+        long time = world.getTime() - store.startTimeStamp;
+        store.leaderBoard.put(playerName, time);
+        printLeaderBoard(world, store);
+        return ActionResult.PASS;
     }
 
     private int executeStartTimer(CommandContext<ServerCommandSource> context) {
@@ -137,6 +260,8 @@ public class Lurchium implements ModInitializer {
         store.startTimeStamp = 0;
         store.clockDisplay = "";
         this.oldTime = -1;
+        store.leaderBoard.clear();
+        printLeaderBoard(world, store);
     }
 
     private void onTick(World world, Store store) {
