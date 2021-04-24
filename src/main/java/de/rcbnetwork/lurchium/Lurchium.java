@@ -135,7 +135,7 @@ public class Lurchium implements ModInitializer {
         int size = leaderboard.size();
         for (Text key : leaderboard.keySet()) {
             long value = leaderboard.get(key);
-            text = (LiteralText) text.append(String.format("%d. ", i + 1) ).append(key).append(" ").append(formatIGT(value));
+            text = (LiteralText) text.append(String.format("%d. ", i + 1)).append(key).append(" ").append(formatIGT(value));
             if (i != size - 1) {
                 text = (LiteralText) text.append("\n");
             }
@@ -158,29 +158,31 @@ public class Lurchium implements ModInitializer {
         int i = 0;
         for (Text playerName : store.leaderBoard.keySet()) {
             SignBlockEntity signBlockEntity = (SignBlockEntity) world.getBlockEntity(signPosition);
-            state = world.getBlockState(signPosition);
             if (signBlockEntity == null) {
                 break;
             }
+            state = world.getBlockState(signPosition);
             long time = store.leaderBoard.get(playerName);
             signBlockEntity.setTextOnRow(0, new LiteralText(String.format("- %d -", i + 1)));
             signBlockEntity.setTextOnRow(1, playerName.shallowCopy().formatted(Formatting.BOLD));
             signBlockEntity.setTextOnRow(2, new LiteralText(""));
             signBlockEntity.setTextOnRow(3, new LiteralText(formatIGT(time)));
-            ((ServerWorld)world).updateListeners(signPosition, state, state, 3);
+            ((ServerWorld) world).updateListeners(signPosition, state, state, 3);
             signPosition = signPosition.offset(direction);
             i++;
         }
     }
 
     private Direction getSignDirectionFromState(BlockState state) {
-        Direction direction = state.get(FACING);
-        if (direction == null) {
+        Direction direction;
+        try {
+            direction = state.get(FACING);
+        } catch (IllegalArgumentException e) {
             int rotation = state.get(ROTATION); // 0 == north, 4 == west, 8 == south, 12 == east
-            return rotation < 2 ? Direction.WEST :
-                        rotation < 6 ? Direction.SOUTH :
-                        rotation < 10 ? Direction.EAST :
-                        rotation < 14 ? Direction.NORTH : Direction.WEST;
+            return rotation < 2 ? Direction.EAST :
+                    rotation < 6 ? Direction.SOUTH :
+                            rotation < 10 ? Direction.WEST :
+                                    rotation < 14 ? Direction.NORTH : Direction.EAST;
         }
         return direction.rotateYCounterclockwise();
 
@@ -345,6 +347,7 @@ public class Lurchium implements ModInitializer {
         store.clockDisplay = "";
         this.oldTime = -1;
     }
+
     private int executeResetLeaderBoard(CommandContext<ServerCommandSource> context) {
         ServerWorld world = context.getSource().getWorld();
         resetLeaderBoard(world);
