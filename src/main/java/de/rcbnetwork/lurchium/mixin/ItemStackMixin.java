@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
     @Inject(method = "fromTag", at=@At("HEAD"), cancellable = true)
-    private static void handleFromTag(CompoundTag tag, CallbackInfoReturnable info) {
+    private static void handleFromTag(CompoundTag tag, CallbackInfoReturnable<ItemStack> info) {
         CompoundTag t = tag.getCompound("tag");
         String lurchium = t != null ? t.getString("lurchium") : null;
         if (lurchium == null) {

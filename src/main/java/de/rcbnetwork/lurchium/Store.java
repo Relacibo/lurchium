@@ -13,26 +13,26 @@ import java.util.Map;
 
 public class Store implements ComponentV3 {
     public long startTimeStamp;
-    public String clockDisplay;
+    public String clockDisplay = "";
     public long updateTick;
-    public BlockPos signPosition;
-    public BlockPos chestPosition;
+    public BlockPos signPosition = null;
+    public BlockPos chestPosition = null;
     public final Map<Text, Long> leaderBoard = new HashMap<>();
-
-    protected Store() {
-        this.clockDisplay = "";
-    }
 
     @Override
     public void readFromNbt(CompoundTag tag) {
         this.startTimeStamp = tag.getLong("startTimeStamp");
-        this.signPosition = Util.convertTagToBlockPos(tag.getCompound("signPosition"));
-        this.chestPosition = Util.convertTagToBlockPos(tag.getCompound("chestPosition"));
+        if (tag.get("signPosition") != null) {
+            this.signPosition = Util.convertTagToBlockPos(tag.getCompound("signPosition"));
+        }
+        if (tag.get("chestPosition") != null) {
+            this.chestPosition = Util.convertTagToBlockPos(tag.getCompound("chestPosition"));
+        }
         CompoundTag leaderBoardTag = tag.getCompound("leaderBoard");
         if (leaderBoardTag != null) {
             for (String key : leaderBoardTag.getKeys()) {
                 long value = leaderBoardTag.getLong(key);
-                this.leaderBoard.put(Text.of(key), value);
+                this.leaderBoard.put(new LiteralText(key), value);
             }
         }
     }
@@ -40,8 +40,12 @@ public class Store implements ComponentV3 {
     @Override
     public void writeToNbt(CompoundTag tag) {
         tag.putLong("startTimeStamp", this.startTimeStamp);
-        tag.put("signPosition", Util.convertBlockPosToTag(this.signPosition));
-        tag.put("chestPosition", Util.convertBlockPosToTag(this.chestPosition));
+        if (this.signPosition != null) {
+            tag.put("signPosition", Util.convertBlockPosToTag(this.signPosition));
+        }
+        if (this.chestPosition != null) {
+            tag.put("chestPosition", Util.convertBlockPosToTag(this.chestPosition));
+        }
 
         CompoundTag leaderBoardTag = new CompoundTag();
         for (Text key : this.leaderBoard.keySet()) {

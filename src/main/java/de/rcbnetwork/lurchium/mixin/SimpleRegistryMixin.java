@@ -11,9 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SimpleRegistry.class)
 public class SimpleRegistryMixin<T> {
-    @Nullable
     @Inject(method="getId", cancellable = true, at=@At("HEAD"))
-    public void handleGetId(T entry, CallbackInfoReturnable info) {
+    public void handleGetId(T entry, CallbackInfoReturnable<Identifier> info) {
         if (!(entry instanceof ServersideObject)) {
             return;
         }
@@ -22,8 +21,8 @@ public class SimpleRegistryMixin<T> {
     }
 
     @Inject(method="getRawId", cancellable = true, at=@At("HEAD"))
-    public void handleGetRawId(T entry, CallbackInfoReturnable info) {
-        if (entry == null || !(entry instanceof ServersideObject)) {
+    public void handleGetRawId(T entry, CallbackInfoReturnable<Integer> info) {
+        if (!(entry instanceof ServersideObject)) {
             return;
         }
         int rawId = ((ServersideObject)entry).getParentRawId();
