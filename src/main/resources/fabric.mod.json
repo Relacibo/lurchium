@@ -17,11 +17,6 @@
   "icon": "assets/lurchium/icon.png",
 
   "environment": "*",
-  "entrypoints": {
-    "main": [
-      "de.rcbnetwork.lurchium.Lurchium"
-    ]
-  },
   "mixins": [
     "lurchium.mixins.json"
   ],
@@ -35,6 +30,9 @@
     "another-mod": "*"
   },
   "entrypoints": {
+    "main": [
+      "de.rcbnetwork.lurchium.Lurchium"
+    ],
     "cardinal-components": [
       "de.rcbnetwork.lurchium.StoreInitializer"
     ]

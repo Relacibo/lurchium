@@ -22,14 +22,16 @@ public class Store implements ComponentV3 {
     @Override
     public void readFromNbt(CompoundTag tag) {
         this.startTimeStamp = tag.getLong("startTimeStamp");
-        if (tag.get("signPosition") != null) {
-            this.signPosition = Util.convertTagToBlockPos(tag.getCompound("signPosition"));
+        CompoundTag signPositionTag = tag.getCompound("signPosition");
+        if (tag.get("signPosition") != null && !signPositionTag.isEmpty()) {
+            this.signPosition = Util.convertTagToBlockPos(signPositionTag);
         }
-        if (tag.get("chestPosition") != null) {
-            this.chestPosition = Util.convertTagToBlockPos(tag.getCompound("chestPosition"));
+        CompoundTag chestPositionTag = tag.getCompound("chestPosition");
+        if (chestPositionTag != null && !chestPositionTag.isEmpty()) {
+            this.chestPosition = Util.convertTagToBlockPos(chestPositionTag);
         }
         CompoundTag leaderBoardTag = tag.getCompound("leaderBoard");
-        if (leaderBoardTag != null) {
+        if (leaderBoardTag != null && !leaderBoardTag.isEmpty()) {
             for (String key : leaderBoardTag.getKeys()) {
                 long value = leaderBoardTag.getLong(key);
                 this.leaderBoard.put(new LiteralText(key), value);

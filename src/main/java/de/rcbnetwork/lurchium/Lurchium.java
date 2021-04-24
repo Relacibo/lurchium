@@ -1,5 +1,6 @@
 package de.rcbnetwork.lurchium;
 
+import com.google.common.eventbus.DeadEvent;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -195,6 +196,9 @@ public class Lurchium implements ModInitializer {
     private int executeUnsetDisplay(CommandContext<ServerCommandSource> context) {
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(context.getSource().getWorld());
         store.signPosition = null;
+        try {
+            sendPlayerOK(context.getSource().getPlayer());
+        } catch (Exception e) {}
         return 0;
     }
 
@@ -206,79 +210,100 @@ public class Lurchium implements ModInitializer {
         }
         unsetChest(world, store.chestPosition);
         store.chestPosition = null;
+        try {
+            sendPlayerOK(context.getSource().getPlayer());
+        } catch (Exception e) {}
         return 0;
+    }
+
+    private void sendPlayerError(ServerPlayerEntity player, String message) {
+        player.sendMessage(new LiteralText(message).formatted(Formatting.RED), false);
+    }
+
+    private void sendPlayerOK(ServerPlayerEntity player) {
+        player.sendMessage(new LiteralText("OK!").formatted(Formatting.GRAY), false);
+    }
+
+    private void sendPlayerSuccess(ServerPlayerEntity player, String message) {
+        player.sendMessage(new LiteralText(message).formatted(Formatting.GREEN), false);
     }
 
     private int executeSetDisplay(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerWorld world = context.getSource().getWorld();
-        HitResult hit = context.getSource().getPlayer().raycast(20D, 0.0F, false);
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        HitResult hit = player.raycast(20D, 0.0F, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
+            sendPlayerError(player, "No Block found!");
             return 1;
         }
         BlockHitResult blockHit = (BlockHitResult) hit;
         BlockPos pos = blockHit.getBlockPos();
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
-        return setDisplay(world, store, pos) ? 0 : 1;
-    }
-
-    private boolean setDisplay(ServerWorld world, Store store, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof AbstractSignBlock)) {
-            return false;
+            sendPlayerError(player, "Not a sign!");
+            return 1;
         }
         store.signPosition = pos;
         printLeaderBoard(world, store);
-        System.out.println("Set display to: " + store.signPosition);
-        return true;
+        sendPlayerOK(player);
+        return 0;
     }
 
     private int executeSetChest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerWorld world = context.getSource().getWorld();
-        HitResult hit = context.getSource().getPlayer().raycast(20D, 0.0F, false);
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        HitResult hit = player.raycast(20D, 0.0F, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
+            sendPlayerError(player,"No Block found!");
             return 1;
         }
         BlockHitResult blockHit = (BlockHitResult) hit;
         BlockPos pos = blockHit.getBlockPos();
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
-        return setChest(world, store, pos) ? 0 : 1;
-    }
-
-    private boolean setChest(ServerWorld world, Store store, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
         if (state == null) {
-            return false;
+            sendPlayerError(player,"Block has no state!");
+            return 1;
         }
         Block block = state.getBlock();
         if (!(block instanceof ChestBlock)) {
-            return false;
+            sendPlayerError(player, "Block is no chest!");
+            return 1;
         }
         // Check if same chest
         BlockPos oldPos = store.chestPosition;
         if (pos.equals(oldPos)) {
-            return false;
+            sendPlayerError(player, "Chest is already lurchys chest!");
+            return 1;
         }
         ChestBlockEntity inventory = (ChestBlockEntity) ChestBlock.getInventory((ChestBlock) block, state, world, pos, true);
         // Add listener to new chest
         addListenerToChestAt(world, store, pos, inventory);
 
         store.chestPosition = pos;
-        System.out.println("Set chest to: " + store.chestPosition);
-        unsetChest(world, oldPos);
-        return true;
+        if (oldPos != null && unsetChest(world, oldPos)) {
+            sendPlayerSuccess(player, "Unset the other chest!");
+        }
+        sendPlayerOK(player);
+        return 0;
     }
 
-    private void unsetChest(World world, BlockPos pos) {
+    private boolean unsetChest(World world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        if (state != null) {
-            Block chestBlock = state.getBlock();
-            if (chestBlock instanceof ChestBlock) {
-                ChestBlock chest = (ChestBlock) chestBlock;
-                ChestBlockEntity chestBlockEntity = (ChestBlockEntity) ChestBlock.getInventory(chest, state, world, pos, true);
-                ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
-
-            }
+        if (state == null) {
+            return false;
         }
+        Block chestBlock = state.getBlock();
+        if (!(chestBlock instanceof ChestBlock)) {
+            return false;
+        }
+
+        ChestBlock chest = (ChestBlock) chestBlock;
+        ChestBlockEntity chestBlockEntity = (ChestBlockEntity) ChestBlock.getInventory(chest, state, world, pos, true);
+        assert chestBlockEntity != null;
+        ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
+        return true;
     }
 
     private void addListenerToChestAt(ServerWorld world, Store store, BlockPos pos, ChestBlockEntity chestBlockEntity) {
@@ -326,12 +351,18 @@ public class Lurchium implements ModInitializer {
     private int executeStartTimer(CommandContext<ServerCommandSource> context) {
         ServerWorld world = context.getSource().getWorld();
         startTimer(world);
+        try {
+            sendPlayerOK(context.getSource().getPlayer());
+        } catch (Exception e) { }
         return 0;
     }
 
     private int executeResetTimer(CommandContext<ServerCommandSource> context) {
         ServerWorld world = context.getSource().getWorld();
         resetTimer(world);
+        try {
+            sendPlayerOK(context.getSource().getPlayer());
+        } catch (Exception e) { }
         return 0;
     }
 
@@ -351,7 +382,10 @@ public class Lurchium implements ModInitializer {
     private int executeResetLeaderBoard(CommandContext<ServerCommandSource> context) {
         ServerWorld world = context.getSource().getWorld();
         resetLeaderBoard(world);
-        return 1;
+        try {
+            sendPlayerOK(context.getSource().getPlayer());
+        } catch (Exception e) { }
+        return 0;
     }
 
     private void resetLeaderBoard(World world) {
@@ -402,6 +436,9 @@ public class Lurchium implements ModInitializer {
             ItemStack stack = ServersideObjectRegistry.createItemStackOf(new Identifier("lurchium", itemId));
             player.giveItemStack(stack);
         }
+        try {
+            sendPlayerOK(context.getSource().getPlayer());
+        } catch (Exception e) { }
         return 0;
     }
 }

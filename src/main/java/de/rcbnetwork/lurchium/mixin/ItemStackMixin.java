@@ -14,8 +14,11 @@ public class ItemStackMixin {
     @Inject(method = "fromTag", at=@At("HEAD"), cancellable = true)
     private static void handleFromTag(CompoundTag tag, CallbackInfoReturnable<ItemStack> info) {
         CompoundTag t = tag.getCompound("tag");
-        String lurchium = t != null ? t.getString("lurchium") : null;
-        if (lurchium == null) {
+        if (t == null) {
+            return;
+        }
+        String lurchium = t.getString("lurchium");
+        if (lurchium == null || lurchium.equals("")) {
             return;
         }
         info.setReturnValue(ServersideObjectRegistry.createItemStackOf(new Identifier(lurchium)));
