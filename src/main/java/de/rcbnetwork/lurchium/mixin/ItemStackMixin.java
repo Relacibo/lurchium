@@ -13,14 +13,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class ItemStackMixin {
     @Inject(method = "fromTag", at=@At("HEAD"), cancellable = true)
     private static void handleFromTag(CompoundTag tag, CallbackInfoReturnable<ItemStack> info) {
+        if (!tag.contains("tag")) {
+            return;
+        }
         CompoundTag t = tag.getCompound("tag");
-        if (t == null) {
+        if (!t.contains("lurchium")) {
             return;
         }
         String lurchium = t.getString("lurchium");
-        if (lurchium == null || lurchium.equals("")) {
-            return;
-        }
         info.setReturnValue(ServersideObjectRegistry.createItemStackOf(new Identifier(lurchium)));
     }
 }
