@@ -91,7 +91,7 @@ public class Lurchium implements ModInitializer {
                         .then(literal("unset_display")
                                 .executes(this::executeUnsetDisplay))
                         .then(literal("reset_leaderboard")
-                                .executes(this::executeResetLeaderBoard)
+                                .executes(this::executeResetLeaderBoard))
                         .then(literal("broadcast_leaderboard")
                                 .executes(this::broadcastLeaderBoard))
                 ));
