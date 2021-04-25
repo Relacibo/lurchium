@@ -61,7 +61,8 @@ public class ChestBlockEntityMixin extends BlockEntity implements ChestBlockEnti
     @Override
     public void markRemoved() {
         super.markRemoved();
-        this.getChestBreakEvent().trigger();
+        World world = ((ChestBlockEntity)(Object)this).getWorld();
+        this.getChestBreakEvent().trigger(world);
     }
 
     @Override

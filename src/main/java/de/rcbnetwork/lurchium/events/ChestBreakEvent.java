@@ -30,12 +30,12 @@ public class ChestBreakEvent {
         listeners().remove(toRemove);
     }
 
-    public void trigger() {
+    public void trigger(World world) {
         for (ChestBreakListener listener : listeners())
-            listener.chestBroken();
+            listener.chestBroken(world);
     }
 
     public interface ChestBreakListener {
-        ActionResult chestBroken();
+        ActionResult chestBroken(World world);
     }
 }

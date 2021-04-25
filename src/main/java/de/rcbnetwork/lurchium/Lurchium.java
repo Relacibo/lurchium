@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.rcbnetwork.lurchium.Items.LurchysClock;
 import de.rcbnetwork.lurchium.events.ChestBlockEntityLoadedCallback;
+import de.rcbnetwork.lurchium.events.ChestBreakEvent;
 import de.rcbnetwork.lurchium.events.ChestInventoryChangedEvent;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
 import net.fabricmc.api.ModInitializer;
@@ -60,6 +61,11 @@ public class Lurchium implements ModInitializer {
 
     public final ChestInventoryChangedEvent.ChestInventoryChangedListener lurchyChestInventoryChangedHandle =
             this::onLurchyChestInventoryChanged;
+    private ChestBreakEvent.ChestBreakListener lurchyChestBrokenHandle = (world) -> {
+        Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
+        store.chestPosition = null;
+        return ActionResult.PASS;
+    };
 
     @Override
     public void onInitialize() {
@@ -256,6 +262,7 @@ public class Lurchium implements ModInitializer {
         HitResult hit = player.raycast(20D, 0.0F, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
             sendPlayerError(player,"No Block found!");
+            sendPlayerError(player,"No Block found!");
             return 1;
         }
         BlockHitResult blockHit = (BlockHitResult) hit;
@@ -303,15 +310,13 @@ public class Lurchium implements ModInitializer {
         ChestBlockEntity chestBlockEntity = (ChestBlockEntity) ChestBlock.getInventory(chest, state, world, pos, true);
         assert chestBlockEntity != null;
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
+        ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().removeListener(lurchyChestBrokenHandle);
         return true;
     }
 
     private void addListenerToChestAt(ServerWorld world, Store store, BlockPos pos, ChestBlockEntity chestBlockEntity) {
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().addListener(lurchyChestInventoryChangedHandle);
-        ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(() -> {
-            store.chestPosition = null;
-            return ActionResult.PASS;
-        });
+        ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(lurchyChestBrokenHandle);
     }
 
     private ActionResult onLurchyChestInventoryChanged(GenericContainerScreenHandler screenHandler, World world, BlockPos position, Entity entity, ChestBlockEntity chestBlockEntity) {
