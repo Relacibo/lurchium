@@ -3,8 +3,6 @@ package de.rcbnetwork.lurchium;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.HashMap;
-
 public class Util {
     public static CompoundTag convertBlockPosToTag(BlockPos pos) {
         CompoundTag tag = new CompoundTag();

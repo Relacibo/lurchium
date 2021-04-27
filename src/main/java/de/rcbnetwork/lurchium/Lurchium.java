@@ -1,6 +1,5 @@
 package de.rcbnetwork.lurchium;
 
-import com.google.common.eventbus.DeadEvent;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -11,7 +10,6 @@ import de.rcbnetwork.lurchium.events.ChestInventoryChangedEvent;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.block.*;
@@ -21,15 +19,13 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.property.Property;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -42,11 +38,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 
-import javax.swing.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static net.minecraft.block.BellBlock.FACING;
@@ -319,29 +311,27 @@ public class Lurchium implements ModInitializer {
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(lurchyChestBrokenHandle);
     }
 
-    private ActionResult onLurchyChestInventoryChanged(GenericContainerScreenHandler screenHandler, World world, BlockPos position, Entity entity, ChestBlockEntity chestBlockEntity) {
+    private ActionResult onLurchyChestInventoryChanged(
+            GenericContainerScreenHandler screenHandler,
+            World world,
+            BlockPos position,
+            Entity entity,
+            ChestBlockEntity chestBlockEntity,
+            Slot slot,
+            ItemStack stack) {
         if (!(entity instanceof PlayerEntity)) {
+            return ActionResult.PASS;
+        }
+        if (stack.getItem() != (Item)ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"))) {
             return ActionResult.PASS;
         }
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
         if (store.startTimeStamp == 0) {
             return ActionResult.PASS;
         }
-        // Remove clock from inventory
-        Item clock = (Item) ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"));
-        boolean removedClock = false;
-        for (int i = 0; i < chestBlockEntity.size(); ++i) {
-            ItemStack itemStack = chestBlockEntity.getStack(i);
-            if (clock == itemStack.getItem() && itemStack.getCount() > 0) {
-                screenHandler.sendContentUpdates();
-                screenHandler.setStackInSlot(i, ItemStack.EMPTY);
-                screenHandler.sendContentUpdates();
-                removedClock = true;
-            }
-        }
-        if (!removedClock) {
-            return ActionResult.PASS;
-        }
+        screenHandler.sendContentUpdates();
+        slot.setStack(ItemStack.EMPTY);
+        screenHandler.sendContentUpdates();
         PlayerEntity player = (PlayerEntity) entity;
         Text playerName = player.getName();
         if (store.leaderBoard.containsKey(playerName)) {
