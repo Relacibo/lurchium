@@ -4,7 +4,7 @@
   "package": "de.rcbnetwork.lurchium.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "SimpleRegistryMixin", "GenericContainerScreenHandlerMixin","ItemStackMixin","ChestBlockEntityMixin"
+    "SimpleRegistryMixin", "GenericContainerScreenHandlerMixin","ItemStackMixin","ChestBlockEntityMixin", "ScreenHandlerMixin"
   ],
   "client": [
   ],
