@@ -27,7 +27,7 @@ public class LurchysClock extends Item implements LurchiumItem {
             return;
         }
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
-        if (store.updateTick != 0 && store.updateTick != world.getTime() || !(entity instanceof ServerPlayerEntity)) {
+        if (!(entity instanceof ServerPlayerEntity) || store.updateTick == 0) {
             return;
         }
         Text message = new LiteralText(store.clockDisplay);

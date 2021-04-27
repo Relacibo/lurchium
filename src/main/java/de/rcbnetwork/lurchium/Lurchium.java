@@ -395,9 +395,6 @@ public class Lurchium implements ModInitializer {
         }
         long worldTimeStamp = world.getTime();
         long time = worldTimeStamp - timestamp;
-        if (time == this.oldTime) {
-            return;
-        }
         this.oldTime = time;
         store.clockDisplay = formatIGT(time);
         store.updateTick = worldTimeStamp;
