@@ -49,8 +49,6 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class Lurchium implements ModInitializer {
     public final String TIMER_ROOT_COMMAND = "lurchium";
 
-    private long oldTime = -1;
-
     public final ChestInventoryChangedEvent.ChestInventoryChangedListener lurchyChestInventoryChangedHandle =
             this::onLurchyChestInventoryChanged;
     private ChestBreakEvent.ChestBreakListener lurchyChestBrokenHandle = (world) -> {
@@ -371,7 +369,6 @@ public class Lurchium implements ModInitializer {
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
         store.startTimeStamp = 0;
         store.clockDisplay = "";
-        this.oldTime = -1;
     }
 
     private int executeResetLeaderBoard(CommandContext<ServerCommandSource> context) {
@@ -379,7 +376,7 @@ public class Lurchium implements ModInitializer {
         resetLeaderBoard(world);
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception e) { }
+        } catch (Exception ignored) { }
         return 0;
     }
 
@@ -395,7 +392,6 @@ public class Lurchium implements ModInitializer {
         }
         long worldTimeStamp = world.getTime();
         long time = worldTimeStamp - timestamp;
-        this.oldTime = time;
         store.clockDisplay = formatIGT(time);
         store.updateTick = worldTimeStamp;
     }
