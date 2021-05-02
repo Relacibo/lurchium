@@ -19,6 +19,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventories;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GenericContainerScreenHandler;
@@ -36,6 +37,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 
 import java.util.*;
@@ -71,7 +73,6 @@ public class Lurchium implements ModInitializer {
                                             return CommandSource.suggestMatching(ServersideObjectRegistry.ITEMS.keySet().stream().map(Identifier::getPath), builder);
                                         })
                                         .then(argument("players", EntityArgumentType.players())
-                                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                                 .executes(this::executeGive))
                                         .executes(this::executeGive))
                         )
@@ -91,6 +92,10 @@ public class Lurchium implements ModInitializer {
                                 .executes(this::executeResetLeaderBoard))
                         .then(literal("broadcast_leaderboard")
                                 .executes(this::broadcastLeaderBoard))
+                        .then(literal("finish")
+                                .then(argument("players", EntityArgumentType.players())
+                                        .executes(this::executeSetPlayerFinished)))
+
                 ));
         ServerWorldEvents.LOAD.register((s, world) -> {
             Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
@@ -309,6 +314,25 @@ public class Lurchium implements ModInitializer {
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(lurchyChestBrokenHandle);
     }
 
+    private int executeSetPlayerFinished(CommandContext<ServerCommandSource> context) {
+        Collection<ServerPlayerEntity> players;
+        World world = context.getSource().getWorld();
+        Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
+        Item lurchys_clock = (Item)ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"));
+        try {
+            players = (Collection) EntityArgumentType.getEntities(context, "players");
+        } catch (Exception e) {
+            return 1;
+        }
+        for (PlayerEntity player: players) {
+            int count = Inventories.remove(player.inventory, (stack) -> stack.getItem() ==  lurchys_clock, 1, false);
+            if (count > 0) {
+                addPlayerToLeaderBoard(world, store, player);
+            }
+        }
+        return 0;
+    }
+
     private ActionResult onLurchyChestInventoryChanged(
             GenericContainerScreenHandler screenHandler,
             World world,
@@ -330,15 +354,18 @@ public class Lurchium implements ModInitializer {
         screenHandler.sendContentUpdates();
         slot.setStack(ItemStack.EMPTY);
         screenHandler.sendContentUpdates();
-        PlayerEntity player = (PlayerEntity) entity;
+        addPlayerToLeaderBoard(world, store, (PlayerEntity) entity);
+        return ActionResult.PASS;
+    }
+
+    private void addPlayerToLeaderBoard(World world, Store store, PlayerEntity player) {
         Text playerName = player.getName();
         if (store.leaderBoard.containsKey(playerName)) {
-            return ActionResult.PASS;
+            return;
         }
         long time = world.getTime() - store.startTimeStamp;
         store.leaderBoard.put(playerName, time);
         printLeaderBoard(world, store);
-        return ActionResult.PASS;
     }
 
     private int executeStartTimer(CommandContext<ServerCommandSource> context) {
