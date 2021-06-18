@@ -325,7 +325,7 @@ public class Lurchium implements ModInitializer {
             return 1;
         }
         for (PlayerEntity player: players) {
-            int count = Inventories.remove(player.inventory, (stack) -> stack.getItem() ==  lurchys_clock, 1, false);
+            int count = Inventories.remove(player.getInventory(), (stack) -> stack.getItem() ==  lurchys_clock, 1, false);
             if (count > 0) {
                 addPlayerToLeaderBoard(world, store, player);
             }

@@ -1,10 +1,10 @@
 plugins {
-	id 'fabric-loom' version '0.6-SNAPSHOT'
+	id 'fabric-loom' version '0.8-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -36,13 +36,13 @@ dependencies {
 	// Replace modImplementation with modApi if you expose components in your own API
 
 
-	modApi "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:2.8.0"
+	modApi "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:${project.cardinal_components_version}"
 	// Includes Cardinal Components API as a Jar-in-Jar dependency
-	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:2.8.0"
+	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:${project.cardinal_components_version}"
 
-	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-world:2.8.0"
+	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-world:${project.cardinal_components_version}"
 	// Includes Cardinal Components API as a Jar-in-Jar dependency
-	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-world:2.8.0"
+	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-world:${project.cardinal_components_version}"
 
 }
 
@@ -64,7 +64,7 @@ tasks.withType(JavaCompile).configureEach {
 	// The Minecraft launcher currently installs Java 8 for users, so your mod probably wants to target Java 8 too
 	// JDK 9 introduced a new way of specifying this that will make sure no newer classes or methods are used.
 	// We'll use that if it's available, but otherwise we'll use the older option.
-	def targetVersion = 8
+	def targetVersion = 16
 	if (JavaVersion.current().isJava9Compatible()) {
 		 it.options.release = targetVersion
 	}

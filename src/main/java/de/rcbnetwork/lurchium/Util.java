@@ -1,18 +1,18 @@
 package de.rcbnetwork.lurchium;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 
 public class Util {
-    public static CompoundTag convertBlockPosToTag(BlockPos pos) {
-        CompoundTag tag = new CompoundTag();
+    public static NbtCompound convertBlockPosToTag(BlockPos pos) {
+        NbtCompound tag = new NbtCompound();
         tag.putInt("X", pos.getX());
         tag.putInt("Y", pos.getY());
         tag.putInt("Z", pos.getZ());
         return tag;
     }
 
-    public static BlockPos convertTagToBlockPos(CompoundTag tag) {
+    public static BlockPos convertTagToBlockPos(NbtCompound tag) {
         int x, y, z;
         x = tag.getInt("X");
         y = tag.getInt("Y");
