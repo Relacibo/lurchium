@@ -1,6 +1,7 @@
 package de.rcbnetwork.lurchium.Items;
 
-import de.rcbnetwork.lurchium.Lurchium;
+import de.rcbnetwork.lurchium.LurchiumItem;
+import de.rcbnetwork.lurchium.Store;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
