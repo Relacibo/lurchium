@@ -12,7 +12,7 @@
     "sources": "https://github.com/Relacibo/lurchium"
   },
 
-  "license": "CC0-1.0",
+  "license": "GPLv3",
   "icon": "assets/lurchium/icon.png",
 
   "environment": "*",
