@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
-    @Inject(method = "fromTag", at=@At("HEAD"), cancellable = true)
+    @Inject(method = "fromNbt", at=@At("HEAD"), cancellable = true)
     private static void handleFromTag(NbtCompound tag, CallbackInfoReturnable<ItemStack> info) {
         if (!tag.contains("tag")) {
             return;

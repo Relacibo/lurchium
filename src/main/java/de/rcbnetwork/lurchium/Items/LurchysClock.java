@@ -41,7 +41,7 @@ public class LurchysClock extends Item implements LurchiumItem {
 
     @Override
     public int getParentRawId() {
-        return 685;
+        return 798;
     }
 
     @Override

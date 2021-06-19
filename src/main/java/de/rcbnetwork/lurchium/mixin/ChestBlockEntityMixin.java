@@ -4,6 +4,7 @@ import de.rcbnetwork.lurchium.ChestBlockEntityWithCustomEvents;
 import de.rcbnetwork.lurchium.events.ChestBlockEntityLoadedCallback;
 import de.rcbnetwork.lurchium.events.ChestBreakEvent;
 import de.rcbnetwork.lurchium.events.ChestInventoryChangedEvent;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
@@ -11,11 +12,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChestBlockEntity.class)
 public class ChestBlockEntityMixin extends BlockEntity implements ChestBlockEntityWithCustomEvents {
-    public ChestBlockEntityMixin(BlockEntityType<?> type) {
-        super(type);
+    public ChestBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
     }
 
     @Unique
@@ -49,9 +53,9 @@ public class ChestBlockEntityMixin extends BlockEntity implements ChestBlockEnti
     }
 
     @Override
-    public void setLocation(World world, BlockPos pos) {
-        super.setLocation(world, pos);
+    public void setWorld(World world) {
+        super.setWorld(world);
         ChestBlockEntity entity = (ChestBlockEntity) (Object) this;
-        ChestBlockEntityLoadedCallback.EVENT.invoker().interact(world, pos, entity);
+        ChestBlockEntityLoadedCallback.EVENT.invoker().interact(world, this.getPos(), entity);
     }
 }
