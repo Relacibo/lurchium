@@ -19,3 +19,4 @@ Adds the following commands:
 - `lurchium reset_timer` Resets the timer
 - `lurchium finish [player]` Puts the player on the leaderboard and consumes their clock.
 - `lurchium broadcast_leaderboard` Sends the leaderboard as a chat message to all players. 
+- `print_leaderboard`Sends the leaderboard as a chat message to the player.

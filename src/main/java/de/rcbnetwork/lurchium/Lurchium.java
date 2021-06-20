@@ -65,8 +65,8 @@ public class Lurchium implements ModInitializer {
         ServersideObjectRegistry.ITEMS.put(new Identifier("lurchium", "lurchys_clock"), new LurchysClock());
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher, dedicated) -> dispatcher.register(literal(TIMER_ROOT_COMMAND)
-                        .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                         .then(literal("give")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .then(argument("id", string())
                                         .suggests((context, builder) -> {
                                             StringReader stringReader = new StringReader(builder.getInput());
@@ -78,24 +78,35 @@ public class Lurchium implements ModInitializer {
                                         .executes(this::executeGive))
                         )
                         .then(literal("start_timer")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeStartTimer))
                         .then(literal("reset_timer")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeResetTimer))
                         .then(literal("set_chest")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeSetChest))
                         .then(literal("set_display")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeSetDisplay))
                         .then(literal("unset_chest")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeUnsetChest))
                         .then(literal("unset_display")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeUnsetDisplay))
                         .then(literal("reset_leaderboard")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::executeResetLeaderBoard))
                         .then(literal("broadcast_leaderboard")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .executes(this::broadcastLeaderBoard))
                         .then(literal("finish")
+                                .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                                 .then(argument("players", EntityArgumentType.players())
                                         .executes(this::executeSetPlayerFinished)))
+                        .then(literal("print_leaderboard")
+                                .executes(this::printLeaderBoard))
 
                 ));
         ServerWorldEvents.LOAD.register((s, world) -> {
@@ -128,6 +139,18 @@ public class Lurchium implements ModInitializer {
         }
         for (PlayerEntity player : world.getPlayers()) {
             player.sendMessage(leaderboardText, false);
+        }
+        return 0;
+    }
+
+    private int printLeaderBoard(CommandContext<ServerCommandSource> context) {
+        World world = context.getSource().getWorld();
+        Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
+        LiteralText leaderboardText = leaderBoardToText(store.leaderBoard);
+        Text message = leaderboardText.getSiblings().size() > 0 ? leaderboardText : new LiteralText("There are no players on the leaderboard yet!");
+        try {
+            context.getSource().getPlayer().sendMessage(message, false);
+        } catch (CommandSyntaxException e) {
         }
         return 0;
     }
@@ -200,7 +223,8 @@ public class Lurchium implements ModInitializer {
         store.signPosition = null;
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         return 0;
     }
 
@@ -214,7 +238,8 @@ public class Lurchium implements ModInitializer {
         store.chestPosition = null;
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         return 0;
     }
 
@@ -257,8 +282,8 @@ public class Lurchium implements ModInitializer {
         ServerPlayerEntity player = context.getSource().getPlayer();
         HitResult hit = player.raycast(20D, 0.0F, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
-            sendPlayerError(player,"No Block found!");
-            sendPlayerError(player,"No Block found!");
+            sendPlayerError(player, "No Block found!");
+            sendPlayerError(player, "No Block found!");
             return 1;
         }
         BlockHitResult blockHit = (BlockHitResult) hit;
@@ -266,7 +291,7 @@ public class Lurchium implements ModInitializer {
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
         BlockState state = world.getBlockState(pos);
         if (state == null) {
-            sendPlayerError(player,"Block has no state!");
+            sendPlayerError(player, "Block has no state!");
             return 1;
         }
         Block block = state.getBlock();
@@ -319,14 +344,14 @@ public class Lurchium implements ModInitializer {
         Collection<ServerPlayerEntity> players;
         World world = context.getSource().getWorld();
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
-        Item lurchys_clock = (Item)ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"));
+        Item lurchys_clock = (Item) ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"));
         try {
             players = (Collection) EntityArgumentType.getEntities(context, "players");
         } catch (Exception e) {
             return 1;
         }
-        for (PlayerEntity player: players) {
-            int count = Inventories.remove(player.getInventory(), (stack) -> stack.getItem() ==  lurchys_clock, 1, false);
+        for (PlayerEntity player : players) {
+            int count = Inventories.remove(player.getInventory(), (stack) -> stack.getItem() == lurchys_clock, 1, false);
             if (count > 0) {
                 addPlayerToLeaderBoard(world, store, player);
             }
@@ -345,7 +370,7 @@ public class Lurchium implements ModInitializer {
         if (!(entity instanceof PlayerEntity)) {
             return ActionResult.PASS;
         }
-        if (stack.getItem() != (Item)ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"))) {
+        if (stack.getItem() != (Item) ServersideObjectRegistry.ITEMS.get(new Identifier("lurchium", "lurchys_clock"))) {
             return ActionResult.PASS;
         }
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
@@ -374,7 +399,8 @@ public class Lurchium implements ModInitializer {
         startTimer(world);
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception e) { }
+        } catch (Exception e) {
+        }
         return 0;
     }
 
@@ -383,7 +409,8 @@ public class Lurchium implements ModInitializer {
         resetTimer(world);
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception e) { }
+        } catch (Exception e) {
+        }
         return 0;
     }
 
@@ -404,7 +431,8 @@ public class Lurchium implements ModInitializer {
         resetLeaderBoard(world);
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
         return 0;
     }
 
@@ -454,7 +482,8 @@ public class Lurchium implements ModInitializer {
         }
         try {
             sendPlayerOK(context.getSource().getPlayer());
-        } catch (Exception e) { }
+        } catch (Exception e) {
+        }
         return 0;
     }
 }
