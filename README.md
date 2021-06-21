@@ -23,4 +23,4 @@ Adds the following commands:
 - `lurchium leaderboard reset` Removes all entries from the leaderboard.
 - `lurchium add_timer_display` Adds the sign the player is pointing at to the timer displays.
 - `lurchium reset_timer_displays` Removes all timer displays
-- `lurchium print_timer_displays` Sends a list of coordinates of all timer displays.
+- `lurchium print_timer_display_positions` Sends a list of coordinates of all timer displays.
