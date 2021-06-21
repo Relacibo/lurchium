@@ -21,3 +21,6 @@ Adds the following commands:
 - `lurchium leaderboard broadcast` Sends the leaderboard as a chat message to all players. 
 - `lurchium leaderboard print` Sends the leaderboard as a chat message to the player.
 - `lurchium leaderboard reset` Removes all entries from the leaderboard.
+- `lurchium add_timer_display` Adds the sign the player is pointing at to the timer displays.
+- `lurchium reset_timer_displays` Removes all timer displays
+- `lurchium print_timer_displays` Sends a list of coordinates of all timer displays.
