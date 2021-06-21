@@ -280,7 +280,7 @@ public class Lurchium implements ModInitializer {
     private int executeResetTimerDisplays(CommandContext<ServerCommandSource> context) {
         ServerWorld world = context.getSource().getWorld();
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
-        store.timerSignPositions = Set.of();
+        store.timerSignPositions.clear();
         context.getSource().sendFeedback(Text.of("Resetted the timer displays!"), true);
         return 0;
     }
@@ -472,18 +472,19 @@ public class Lurchium implements ModInitializer {
         store.clockDisplay = Util.formatIGT(time);
         store.updateTick = worldTimeStamp;
         if (this.oldTime == 0 || this.oldTime / 20 != time / 20) {
-            store.timerSignPositions = store.timerSignPositions.stream().filter(pos -> {
+            Iterator<BlockPos> iter = store.timerSignPositions.iterator();
+            while (iter.hasNext()) {
+                BlockPos pos = iter.next();
                 SignBlockEntity signBlockEntity = (SignBlockEntity) world.getBlockEntity(pos);
                 if (signBlockEntity == null) {
-                    return false;
-                } else {
-                    BlockState state = world.getBlockState(pos);
-                    String formattedTime = Util.formatIGTSeconds(time);
-                    signBlockEntity.setTextOnRow(1, new LiteralText(String.format("- %s -", formattedTime)));
-                    world.updateListeners(pos, state, state, 3);
-                    return true;
+                    iter.remove();
+                    break;
                 }
-            }).collect(Collectors.toSet());
+                BlockState state = world.getBlockState(pos);
+                String formattedTime = Util.formatIGTSeconds(time);
+                signBlockEntity.setTextOnRow(1, new LiteralText(String.format("- %s -", formattedTime)));
+                world.updateListeners(pos, state, state, 3);
+            }
         }
         this.oldTime = time;
     }

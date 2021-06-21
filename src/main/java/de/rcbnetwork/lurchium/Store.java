@@ -16,7 +16,7 @@ public class Store implements ComponentV3 {
     public String clockDisplay = "";
     public long updateTick;
     public BlockPos signPosition = null;
-    public Set<BlockPos> timerSignPositions = Set.of();
+    public final Set<BlockPos> timerSignPositions = new HashSet<>();
     public BlockPos chestPosition = null;
     public final Map<Text, Long> leaderBoard = new HashMap<>();
 
