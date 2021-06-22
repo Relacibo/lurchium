@@ -426,8 +426,11 @@ public class Lurchium implements ModInitializer {
 
     private int executeStartTimer(CommandContext<ServerCommandSource> context) {
         ServerWorld world = context.getSource().getWorld();
-        startTimer(world);
-        context.getSource().sendFeedback(Text.of("Started timer!"), true);
+        if (startTimer(world)) {
+            context.getSource().sendFeedback(Text.of("Started timer!"), true);
+        } else {
+            context.getSource().sendError(Text.of("Timer already started!"));
+        }
         return 0;
     }
 
@@ -439,9 +442,14 @@ public class Lurchium implements ModInitializer {
     }
 
 
-    private void startTimer(World world) {
+    private boolean startTimer(World world) {
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
+        if (store.startTimeStamp != 0) {
+            return false;
+        }
         store.startTimeStamp = world.getTime();
+        return true;
+
     }
 
     private void resetTimer(World world) {
