@@ -19,7 +19,7 @@ public class ServersideObjectRegistry {
             return ItemStack.EMPTY;
         }
         ItemStack stack = new ItemStack((Item)item, 1);
-        stack.getOrCreateTag().putString("lurchium", id.toString());
+        stack.getOrCreateNbt().putString("lurchium", id.toString());
         if (item.getCustomName() != null) {
             stack.setCustomName(new LiteralText(item.getCustomName()));
         }
