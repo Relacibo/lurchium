@@ -35,8 +35,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 
 
@@ -483,10 +483,14 @@ public class Lurchium implements ModInitializer {
             Iterator<BlockPos> iter = store.timerSignPositions.iterator();
             while (iter.hasNext()) {
                 BlockPos pos = iter.next();
+                boolean isLoaded = world.isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getY()));
+                if (!isLoaded) {
+                    continue;
+                }
                 SignBlockEntity signBlockEntity = (SignBlockEntity) world.getBlockEntity(pos);
                 if (signBlockEntity == null) {
                     iter.remove();
-                    break;
+                    continue;
                 }
                 BlockState state = world.getBlockState(pos);
                 String formattedTime = Util.formatIGTSeconds(time);

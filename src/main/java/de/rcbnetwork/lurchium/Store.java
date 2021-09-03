@@ -69,5 +69,6 @@ public class Store implements ComponentV3 {
         for (BlockPos pos : this.timerSignPositions) {
             timerSignPositionsList.add(Util.convertBlockPosToTag(pos));
         }
+        tag.put("timerSignPositions", timerSignPositionsList);
     }
 }
