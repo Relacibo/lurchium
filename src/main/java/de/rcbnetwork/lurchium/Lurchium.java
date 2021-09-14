@@ -367,7 +367,11 @@ public class Lurchium implements ModInitializer {
         assert chestBlockEntity != null;
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().removeListener(lurchyChestBrokenHandle);
-        lurchysChestPowered = false;
+        if (lurchysChestPowered) {
+            lurchysChestPowered = false;
+            world.updateNeighborsAlways(pos, chest);
+            world.updateNeighborsAlways(pos.down(), chest);
+        }
         var stateWCF = (BlockStateWithCustomFields) state;
         stateWCF.setExtensionFunction(null);
         return true;
