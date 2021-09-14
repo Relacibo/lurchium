@@ -27,6 +27,7 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -128,13 +129,13 @@ public class Lurchium implements ModInitializer {
         ChestBlockEntityLoadedCallback.EVENT.register(this::onChestLoaded);
     }
 
-    private ActionResult onChestLoaded(World world, BlockPos pos, ChestBlockEntity entity) {
+    private ActionResult onChestLoaded(World world, BlockPos pos, ChestBlockEntity entity, BlockState state) {
         Store store = (Store) ComponentRegistryV3.INSTANCE.get(new Identifier("lurchium", "store")).get(world);
         BlockPos chestPosition = store.chestPosition;
         if (!pos.equals(chestPosition)) {
             return ActionResult.PASS;
         }
-        addListenerToChestAt((ServerWorld) world, store, pos, entity);
+        setChest((ServerWorld) world, store, state, pos, entity);
         return ActionResult.PASS;
     }
 
@@ -337,7 +338,7 @@ public class Lurchium implements ModInitializer {
         }
         ChestBlockEntity inventory = (ChestBlockEntity) ChestBlock.getInventory((ChestBlock) block, state, world, pos, true);
         // Add listener to new chest
-        addListenerToChestAt(world, store, pos, inventory);
+        setChest(world, store, state, pos, inventory);
 
         store.chestPosition = pos;
         if (oldPos != null && unsetChest(world, oldPos)) {
@@ -362,12 +363,28 @@ public class Lurchium implements ModInitializer {
         assert chestBlockEntity != null;
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().removeListener(lurchyChestBrokenHandle);
+        var stateWCF = (BlockStateWithCustomFields) state;
+        stateWCF.setEmitsRedstonePowerFunction(null);
+        stateWCF.setGetStrongRedstonePowerFunction(null);
+        stateWCF.setGetWeakRedstonePowerFunction(null);
+        stateWCF.setScheduleTickFunction(null);
         return true;
     }
 
-    private void addListenerToChestAt(ServerWorld world, Store store, BlockPos pos, ChestBlockEntity chestBlockEntity) {
+    private void setChest(ServerWorld world, Store store, BlockState state, BlockPos pos, ChestBlockEntity chestBlockEntity) {
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().addListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(lurchyChestBrokenHandle);
+        var stateWCF = (BlockStateWithCustomFields) state;
+        stateWCF.setEmitsRedstonePowerFunction(b -> true);
+        stateWCF.setGetStrongRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
+        stateWCF.setGetWeakRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
+        stateWCF.setScheduleTickFunction(b -> serverWorld -> blockPos -> random -> {
+            if ((Boolean) state.get(Properties.POWERED)) {
+                world.setBlockState(pos, (BlockState) state.with(Properties.POWERED, false), Block.NOTIFY_ALL);
+                world.updateNeighborsAlways(pos, b);
+                world.updateNeighborsAlways(pos.down(), b);
+            }
+        });
     }
 
     private int executeSetPlayerFinished(CommandContext<ServerCommandSource> context) {
@@ -392,7 +409,7 @@ public class Lurchium implements ModInitializer {
     private ActionResult onLurchyChestInventoryChanged(
             GenericContainerScreenHandler screenHandler,
             World world,
-            BlockPos position,
+            BlockPos pos,
             Entity entity,
             ChestBlockEntity chestBlockEntity,
             Slot slot,
@@ -411,9 +428,17 @@ public class Lurchium implements ModInitializer {
         slot.setStack(ItemStack.EMPTY);
         screenHandler.sendContentUpdates();
         addPlayerToLeaderBoard(world, store, (PlayerEntity) entity);
-        Block block = chestBlockEntity.getCachedState().getBlock();
-        world.updateNeighborsAlways(position, block);
-        world.updateNeighborsAlways(position.down(), block);
+
+        var state = chestBlockEntity.getCachedState();
+
+        world.setBlockState(pos, (BlockState) state.with(Properties.POWERED, true), Block.NOTIFY_ALL);
+
+        Block block = state.getBlock();
+        world.updateNeighborsAlways(pos, block);
+        world.updateNeighborsAlways(pos.down(), block);
+
+        world.getBlockTickScheduler().schedule(pos, block, 30);
+
         return ActionResult.PASS;
     }
 
