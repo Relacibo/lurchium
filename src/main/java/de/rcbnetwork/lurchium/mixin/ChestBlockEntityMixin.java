@@ -4,29 +4,15 @@ import de.rcbnetwork.lurchium.ChestBlockEntityWithCustomEvents;
 import de.rcbnetwork.lurchium.events.ChestBlockEntityLoadedCallback;
 import de.rcbnetwork.lurchium.events.ChestBreakEvent;
 import de.rcbnetwork.lurchium.events.ChestInventoryChangedEvent;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.event.GameEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Random;
 
@@ -63,6 +49,7 @@ public class ChestBlockEntityMixin extends BlockEntity implements ChestBlockEnti
         super.markRemoved();
         World world = ((ChestBlockEntity)(Object)this).getWorld();
         boolean loaded = world.isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getY()));
+        System.out.println("Loaded " + loaded);
         if (loaded && chestBreakEvent != null) {
             chestBreakEvent.trigger(world);
         }

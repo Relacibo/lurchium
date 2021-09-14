@@ -2,6 +2,7 @@ package de.rcbnetwork.lurchium.mixin;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;
+import de.rcbnetwork.lurchium.BlockStateExtensionFunctions;
 import de.rcbnetwork.lurchium.BlockStateWithCustomFields;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -32,51 +33,15 @@ public class BlockStateMixin extends AbstractBlock.AbstractBlockState implements
     }
 
     @Unique
-    public Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getGetWeakRedstonePowerFunction() {
-        return getWeakRedstonePowerFunction;
+    public BlockStateExtensionFunctions extensionFunctions = null;
+
+    @Unique
+    public BlockStateExtensionFunctions getExtensionFunctions() {
+        return extensionFunctions;
     }
 
     @Unique
-    public void overrideGetWeakRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction) {
-        this.getWeakRedstonePowerFunction = getWeakRedstonePowerFunction;
+    public void setExtensionFunction(BlockStateExtensionFunctions functions) {
+        this.extensionFunctions = functions;
     }
-
-    @Unique
-    public Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getGetStrongRedstonePowerFunction() {
-        return getStrongRedstonePowerFunction;
-    }
-
-    @Unique
-    public void overrideGetStrongRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction) {
-        this.getStrongRedstonePowerFunction = getStrongRedstonePowerFunction;
-    }
-
-    @Unique
-    public Function<Block, Boolean> getEmitsRedstonePowerFunction() {
-        return emitsRedstonePowerFunction;
-    }
-
-    @Unique
-    public void overrideEmitsRedstonePowerFunction(Function<Block, Boolean> emitsRedstonePowerFunction) {
-        this.emitsRedstonePowerFunction = emitsRedstonePowerFunction;
-    }
-
-    @Unique
-    public Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> getScheduleTickFunction() {
-        return scheduleTickFunction;
-    }
-
-    @Unique
-    public void setScheduleTickFunction(Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> scheduleTickFunction) {
-        this.scheduleTickFunction = scheduleTickFunction;
-    }
-
-    @Unique
-    public Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction = null;
-    @Unique
-    public Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction = null;
-    @Unique
-    public Function<Block, Boolean> emitsRedstonePowerFunction = null;
-    @Unique
-    public Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> scheduleTickFunction = null;
 }

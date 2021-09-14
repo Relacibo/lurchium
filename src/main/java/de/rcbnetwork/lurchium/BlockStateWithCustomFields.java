@@ -12,13 +12,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface BlockStateWithCustomFields {
-    Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getGetWeakRedstonePowerFunction();
-    void overrideGetWeakRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction);
-    Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getGetStrongRedstonePowerFunction();
-    void overrideGetStrongRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction);
-    Function<Block, Boolean> getEmitsRedstonePowerFunction();
-    void overrideEmitsRedstonePowerFunction(Function<Block, Boolean> emitsRedstonePowerFunction);
-    Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> getScheduleTickFunction();
-    void setScheduleTickFunction(Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> scheduleTickFunction);
-
+    BlockStateExtensionFunctions getExtensionFunctions();
+    void setExtensionFunction(BlockStateExtensionFunctions functions);
 }

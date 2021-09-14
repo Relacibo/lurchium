@@ -30,37 +30,41 @@ class ChestBlockMixin extends AbstractChestBlock<ChestBlockEntity> {
     @Override
     public int getWeakRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
         BlockStateWithCustomFields stateWCF = (BlockStateWithCustomFields)state;
-        if (stateWCF.getGetWeakRedstonePowerFunction() == null) {
+        var ext = stateWCF.getExtensionFunctions();
+        if (ext == null) {
             return 0;
         }
-        return stateWCF.getGetWeakRedstonePowerFunction().apply(this).apply(world).apply(pos).apply(direction);
+        return ext.getWeakRedstonePower(this, world, pos, direction);
     }
 
     @Override
     public int getStrongRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
         BlockStateWithCustomFields stateWCF = (BlockStateWithCustomFields)state;
-        if (stateWCF.getGetStrongRedstonePowerFunction() == null) {
+        var ext = stateWCF.getExtensionFunctions();
+        if (ext == null) {
             return 0;
         }
-        return stateWCF.getGetStrongRedstonePowerFunction().apply(this).apply(world).apply(pos).apply(direction);
+        return ext.getStrongRedstonePower(this, world, pos, direction);
     }
 
     @Override
     public boolean emitsRedstonePower(BlockState state) {
         BlockStateWithCustomFields stateWCF = (BlockStateWithCustomFields)state;
-        if (stateWCF.getEmitsRedstonePowerFunction() == null) {
+        var ext = stateWCF.getExtensionFunctions();
+        if (ext == null) {
             return false;
         }
-        return stateWCF.getEmitsRedstonePowerFunction().apply(this);
+        return ext.emitsRedstonePower(this);
     }
 
     @Override
     public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
         BlockStateWithCustomFields stateWCF = (BlockStateWithCustomFields)state;
-        if (stateWCF.getScheduleTickFunction() == null) {
+        var ext = stateWCF.getExtensionFunctions();
+        if (ext == null) {
             return;
         }
-        stateWCF.getScheduleTickFunction().apply(this).apply(world).apply(pos).accept(random);
+        ext.scheduleTick(this, world, pos, random);
     }
 
     @Shadow

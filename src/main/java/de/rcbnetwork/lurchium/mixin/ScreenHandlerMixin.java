@@ -22,18 +22,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class ScreenHandlerMixin {
     @Unique
     void extendSetStackHelper(Slot slot, ItemStack stack) {
-        System.out.println("0");
         if (!((Object)this instanceof GenericContainerScreenHandler)) {
             return;
         }
-        System.out.println("1");
 
         Inventory inventory = ((GenericContainerScreenHandler)(Object)this).getInventory();
         if (!(inventory instanceof ChestBlockEntity)) {
             return;
         }
-        System.out.println("slot " + slot.toString());
-        System.out.println("stack" + stack.toString());
         PlayerEntity player = ((GenericContainerScreenHandlerWithCustomFields)(Object)this).getPlayerInventory().player;
         World world = player.world;
         ChestBlockEntity chestBlockEntitiy = (ChestBlockEntity) inventory;

@@ -39,6 +39,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 
@@ -63,6 +64,8 @@ public class Lurchium implements ModInitializer {
     };
 
     private long oldTime = 0;
+
+    private volatile boolean lurchysChestPowered = false;
 
     @Override
     public void onInitialize() {
@@ -364,32 +367,41 @@ public class Lurchium implements ModInitializer {
         assert chestBlockEntity != null;
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().removeListener(lurchyChestBrokenHandle);
-        if (chestBlockEntity instanceof TrappedChestBlockEntity) {
-            var stateWCF = (BlockStateWithCustomFields) state;
-            stateWCF.overrideEmitsRedstonePowerFunction(null);
-            stateWCF.overrideGetStrongRedstonePowerFunction(null);
-            stateWCF.overrideGetWeakRedstonePowerFunction(null);
-            stateWCF.setScheduleTickFunction(null);
-        }
+        lurchysChestPowered = false;
+        var stateWCF = (BlockStateWithCustomFields) state;
+        stateWCF.setExtensionFunction(null);
         return true;
     }
 
     private void setChest(ServerWorld world, Store store, BlockState state, BlockPos pos, ChestBlockEntity chestBlockEntity) {
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().addListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(lurchyChestBrokenHandle);
-        if (chestBlockEntity instanceof TrappedChestBlockEntity) {
-            var stateWCF = (BlockStateWithCustomFields) state;
-            stateWCF.overrideEmitsRedstonePowerFunction(b -> true);
-            stateWCF.overrideGetStrongRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
-            stateWCF.overrideGetWeakRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
-            stateWCF.setScheduleTickFunction(b -> serverWorld -> blockPos -> random -> {
-                if ((Boolean) state.get(Properties.POWERED)) {
-                    world.setBlockState(pos, (BlockState) state.with(Properties.POWERED, false), Block.NOTIFY_ALL);
-                    world.updateNeighborsAlways(pos, b);
-                    world.updateNeighborsAlways(pos.down(), b);
+        var stateWCF = (BlockStateWithCustomFields) state;
+        stateWCF.setExtensionFunction(new BlockStateExtensionFunctions() {
+            @Override
+            public int getWeakRedstonePower(Block block, BlockView blockView, BlockPos pos, Direction dir) {
+                return lurchysChestPowered ? 15 : 0;
+            }
+
+            @Override
+            public int getStrongRedstonePower(Block block, BlockView blockView, BlockPos pos, Direction dir) {
+                return lurchysChestPowered ? 15 : 0;
+            }
+
+            @Override
+            public boolean emitsRedstonePower(Block block) {
+                return true;
+            }
+
+            @Override
+            public void scheduleTick(Block block, ServerWorld world, BlockPos pos, Random random) {
+                if (lurchysChestPowered) {
+                    lurchysChestPowered = false;
+                    world.updateNeighborsAlways(pos, block);
+                    world.updateNeighborsAlways(pos.down(), block);
                 }
-            });
-        }
+            }
+        });
     }
 
     private int executeSetPlayerFinished(CommandContext<ServerCommandSource> context) {
@@ -436,9 +448,8 @@ public class Lurchium implements ModInitializer {
 
         var state = chestBlockEntity.getCachedState();
 
-        world.setBlockState(pos, (BlockState) state.with(Properties.POWERED, true), Block.NOTIFY_ALL);
-
         Block block = state.getBlock();
+        lurchysChestPowered = true;
         world.updateNeighborsAlways(pos, block);
         world.updateNeighborsAlways(pos.down(), block);
 
@@ -517,6 +528,7 @@ public class Lurchium implements ModInitializer {
             while (iter.hasNext()) {
                 BlockPos pos = iter.next();
                 boolean isLoaded = world.isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getY()));
+                System.out.println(isLoaded);
                 if (!isLoaded) {
                     continue;
                 }
