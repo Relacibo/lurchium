@@ -411,6 +411,9 @@ public class Lurchium implements ModInitializer {
         slot.setStack(ItemStack.EMPTY);
         screenHandler.sendContentUpdates();
         addPlayerToLeaderBoard(world, store, (PlayerEntity) entity);
+        Block block = chestBlockEntity.getCachedState().getBlock();
+        world.updateNeighborsAlways(position, block);
+        world.updateNeighborsAlways(position.down(), block);
         return ActionResult.PASS;
     }
 
