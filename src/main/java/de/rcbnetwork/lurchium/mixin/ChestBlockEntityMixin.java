@@ -49,7 +49,6 @@ public class ChestBlockEntityMixin extends BlockEntity implements ChestBlockEnti
         super.markRemoved();
         World world = ((ChestBlockEntity)(Object)this).getWorld();
         boolean loaded = world.isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getY()));
-        System.out.println("Loaded " + loaded);
         if (loaded && chestBreakEvent != null) {
             chestBreakEvent.trigger(world);
         }
