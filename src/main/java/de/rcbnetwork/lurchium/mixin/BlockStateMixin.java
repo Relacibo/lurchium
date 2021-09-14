@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 import java.util.Random;
@@ -25,7 +26,8 @@ public class BlockStateMixin extends AbstractBlock.AbstractBlockState implements
         super(block, propertyMap, codec);
     }
 
-    protected BlockState asBlockState() {
+    @Shadow
+    public BlockState asBlockState() {
         return null;
     }
 
@@ -35,7 +37,7 @@ public class BlockStateMixin extends AbstractBlock.AbstractBlockState implements
     }
 
     @Unique
-    public void setGetWeakRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction) {
+    public void overrideGetWeakRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction) {
         this.getWeakRedstonePowerFunction = getWeakRedstonePowerFunction;
     }
 
@@ -45,7 +47,7 @@ public class BlockStateMixin extends AbstractBlock.AbstractBlockState implements
     }
 
     @Unique
-    public void setGetStrongRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction) {
+    public void overrideGetStrongRedstonePowerFunction(Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction) {
         this.getStrongRedstonePowerFunction = getStrongRedstonePowerFunction;
     }
 
@@ -55,7 +57,7 @@ public class BlockStateMixin extends AbstractBlock.AbstractBlockState implements
     }
 
     @Unique
-    public void setEmitsRedstonePowerFunction(Function<Block, Boolean> emitsRedstonePowerFunction) {
+    public void overrideEmitsRedstonePowerFunction(Function<Block, Boolean> emitsRedstonePowerFunction) {
         this.emitsRedstonePowerFunction = emitsRedstonePowerFunction;
     }
 
@@ -70,11 +72,11 @@ public class BlockStateMixin extends AbstractBlock.AbstractBlockState implements
     }
 
     @Unique
-    private Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction = null;
+    public Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getWeakRedstonePowerFunction = null;
     @Unique
-    private Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction = null;
+    public Function<Block, Function<BlockView, Function<BlockPos, Function<Direction, Integer>>>> getStrongRedstonePowerFunction = null;
     @Unique
-    private Function<Block, Boolean> emitsRedstonePowerFunction = null;
+    public Function<Block, Boolean> emitsRedstonePowerFunction = null;
     @Unique
-    private Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> scheduleTickFunction = null;
+    public Function<Block, Function<ServerWorld, Function<BlockPos, Consumer<Random>>>> scheduleTickFunction = null;
 }

@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.block.entity.TrappedChestBlockEntity;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
@@ -363,28 +364,32 @@ public class Lurchium implements ModInitializer {
         assert chestBlockEntity != null;
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().removeListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().removeListener(lurchyChestBrokenHandle);
-        var stateWCF = (BlockStateWithCustomFields) state;
-        stateWCF.setEmitsRedstonePowerFunction(null);
-        stateWCF.setGetStrongRedstonePowerFunction(null);
-        stateWCF.setGetWeakRedstonePowerFunction(null);
-        stateWCF.setScheduleTickFunction(null);
+        if (chestBlockEntity instanceof TrappedChestBlockEntity) {
+            var stateWCF = (BlockStateWithCustomFields) state;
+            stateWCF.overrideEmitsRedstonePowerFunction(null);
+            stateWCF.overrideGetStrongRedstonePowerFunction(null);
+            stateWCF.overrideGetWeakRedstonePowerFunction(null);
+            stateWCF.setScheduleTickFunction(null);
+        }
         return true;
     }
 
     private void setChest(ServerWorld world, Store store, BlockState state, BlockPos pos, ChestBlockEntity chestBlockEntity) {
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getInventoryChangedEvent().addListener(lurchyChestInventoryChangedHandle);
         ((ChestBlockEntityWithCustomEvents) chestBlockEntity).getChestBreakEvent().addListener(lurchyChestBrokenHandle);
-        var stateWCF = (BlockStateWithCustomFields) state;
-        stateWCF.setEmitsRedstonePowerFunction(b -> true);
-        stateWCF.setGetStrongRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
-        stateWCF.setGetWeakRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
-        stateWCF.setScheduleTickFunction(b -> serverWorld -> blockPos -> random -> {
-            if ((Boolean) state.get(Properties.POWERED)) {
-                world.setBlockState(pos, (BlockState) state.with(Properties.POWERED, false), Block.NOTIFY_ALL);
-                world.updateNeighborsAlways(pos, b);
-                world.updateNeighborsAlways(pos.down(), b);
-            }
-        });
+        if (chestBlockEntity instanceof TrappedChestBlockEntity) {
+            var stateWCF = (BlockStateWithCustomFields) state;
+            stateWCF.overrideEmitsRedstonePowerFunction(b -> true);
+            stateWCF.overrideGetStrongRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
+            stateWCF.overrideGetWeakRedstonePowerFunction(b -> blockView -> blockPos -> direction -> state.get(Properties.POWERED) ? 15 : 0);
+            stateWCF.setScheduleTickFunction(b -> serverWorld -> blockPos -> random -> {
+                if ((Boolean) state.get(Properties.POWERED)) {
+                    world.setBlockState(pos, (BlockState) state.with(Properties.POWERED, false), Block.NOTIFY_ALL);
+                    world.updateNeighborsAlways(pos, b);
+                    world.updateNeighborsAlways(pos.down(), b);
+                }
+            });
+        }
     }
 
     private int executeSetPlayerFinished(CommandContext<ServerCommandSource> context) {
