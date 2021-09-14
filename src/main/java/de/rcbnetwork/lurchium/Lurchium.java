@@ -531,7 +531,7 @@ public class Lurchium implements ModInitializer {
             Iterator<BlockPos> iter = store.timerSignPositions.iterator();
             while (iter.hasNext()) {
                 BlockPos pos = iter.next();
-                boolean isLoaded = world.isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getY()));
+                var isLoaded = world.isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getZ()));
                 if (!isLoaded) {
                     continue;
                 }
