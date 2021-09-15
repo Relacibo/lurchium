@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.block.*;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.TrappedChestBlockEntity;
@@ -54,6 +55,8 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class Lurchium implements ModInitializer {
     public final String TIMER_ROOT_COMMAND = "lurchium";
+
+    public int SIGN_POSITION_SEARCH_DISTANCE = 2;
 
     public final ChestInventoryChangedEvent.ChestInventoryChangedListener lurchyChestInventoryChangedHandle =
             this::onLurchyChestInventoryChanged;
@@ -199,11 +202,12 @@ public class Lurchium implements ModInitializer {
 
         Direction direction = getSignDirectionFromState(state);
         int i = 0;
+        BlockEntity blockEnitity = world.getBlockEntity(signPosition);
+        if (blockEnitity == null || !(blockEnitity instanceof SignBlockEntity)) {
+            return;
+        }
+        SignBlockEntity signBlockEntity = (SignBlockEntity)blockEnitity;
         for (Text playerName : store.leaderBoard.keySet()) {
-            SignBlockEntity signBlockEntity = (SignBlockEntity) world.getBlockEntity(signPosition);
-            if (signBlockEntity == null) {
-                break;
-            }
             state = world.getBlockState(signPosition);
             long time = store.leaderBoard.get(playerName);
             signBlockEntity.setTextOnRow(0, new LiteralText(String.format("- %d -", i + 1)));
@@ -211,8 +215,43 @@ public class Lurchium implements ModInitializer {
             signBlockEntity.setTextOnRow(2, new LiteralText(""));
             signBlockEntity.setTextOnRow(3, new LiteralText(Util.formatIGT(time)));
             ((ServerWorld) world).updateListeners(signPosition, state, state, 3);
-            signPosition = signPosition.offset(direction);
             i++;
+            var nextLeaderBoardSign = findNextLeaderBoardSign(world, signPosition, direction);
+            if (nextLeaderBoardSign == null) {
+                return;
+            }
+            signBlockEntity = nextLeaderBoardSign.getSign();
+            signPosition = nextLeaderBoardSign.getPos();
+        }
+    }
+
+    private NextLeaderBoardSign findNextLeaderBoardSign(World world, BlockPos signPosition, Direction direction) {
+        for (int i = 0; i < SIGN_POSITION_SEARCH_DISTANCE; i++) {
+            signPosition = signPosition.offset(direction);
+            System.out.println(signPosition);
+            BlockEntity blockEnitity = world.getBlockEntity(signPosition);
+            if (blockEnitity != null && blockEnitity instanceof SignBlockEntity) {
+                return new NextLeaderBoardSign((SignBlockEntity)blockEnitity, signPosition);
+            }
+        }
+        return null;
+    }
+
+    private class NextLeaderBoardSign {
+        public SignBlockEntity getSign() {
+            return sign;
+        }
+
+        public BlockPos getPos() {
+            return pos;
+        }
+
+        private final SignBlockEntity sign;
+        private final BlockPos pos;
+
+        public NextLeaderBoardSign(SignBlockEntity sign, BlockPos pos) {
+            this.sign = sign;
+            this.pos = pos;
         }
     }
 
